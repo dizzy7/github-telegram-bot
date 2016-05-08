@@ -8,6 +8,7 @@ use AppBundle\Entity\User;
 use AppBundle\Interfaces\TelegramCommand;
 use Doctrine\ORM\EntityManager;
 use Github\Client;
+use Github\Exception\RuntimeException;
 use TelegramBot\Api\BotApi;
 
 class TagsCommand implements TelegramCommand
@@ -96,7 +97,11 @@ class TagsCommand implements TelegramCommand
 
     private function checkRepositoryNewTags(Repository $repository)
     {
-        $githubTags = $this->github->api('repo')->tags($repository->user, $repository->repository);
+        try {
+            $githubTags = $this->github->api('repo')->tags($repository->user, $repository->repository);
+        } catch (RuntimeException $e) {
+            return [];
+        }
         $githubTags = array_map(
             function ($tag) {
                 return $tag['name'];

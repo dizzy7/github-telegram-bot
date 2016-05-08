@@ -1,0 +1,28 @@
+services:
+    app.telegram.api:
+        class: TelegramBot\Api\BotApi
+        arguments: ["%telegram_token%"]
+
+    github.client:
+        class: Github\Client
+        arguments: ["@github.client.cache"]
+        calls:
+            - ["authenticate", ["%github_token%", null, "url_token"]]
+
+    github.client.cache:
+        class: Github\HttpClient\CachedHttpClient
+        arguments:
+            - { cache_dir: "%kernel.cache_dir%/github-api-cache" }
+
+    app.telegram_reciver:
+        class: AppBundle\Service\TelegramReciver
+        arguments: ["@app.telegram.api", "@doctrine.orm.entity_manager"]
+
+    app.command_chain:
+        class: AppBundle\Service\CommandChain
+
+    app.command.tags:
+        class: AppBundle\Service\Command\TagsCommand
+        arguments: ["@doctrine.orm.entity_manager", "@github.client", "@app.telegram.api"]
+        tags:
+            - { name: app.telegram_command }
